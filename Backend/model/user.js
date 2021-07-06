@@ -10,4 +10,3 @@ const user = mongo.Schema(
 );
 
 module.exports = mongo.model("User", user);
-//sonal
