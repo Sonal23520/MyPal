@@ -8,7 +8,7 @@ mongo
     const app = express();
     app.use(express.json());
     app.listen(3000, () => {
-      console.log("Server Started");
+      console.log("Server Started..");
     });
     //////////////////////
     app.post("/user", userController.saveUser);
