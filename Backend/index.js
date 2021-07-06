@@ -7,7 +7,9 @@ mongo
   .then(() => {
     const app = express();
     app.use(express.json());
-    app.listen(3000);
+    app.listen(3000, () => {
+      console.log("Server Started");
+    });
     //////////////////////
     app.post("/user", userController.saveUser);
     app.get("/user", userController.getUser);
