@@ -1,16 +1,18 @@
 const express = require("express");
-const cors = require("cors");
-const body = require("body-parser");
-const port = 3000;
+const mongo = require("mongoose");
 
-const app = express();
-app.use(cors());
-app.use(body.json());
-
-app.listen(port);
-
-app.post("/userLogin", (req, res) => {
-  console.log(JSON.stringify(req.body));
-  console.log(req.body);
-  // res.send("helloo");
-});
+const userController = require("./controllers/userController");
+mongo
+  .connect("mongodb://localhost:27017/mypal", { useUnifiedTopology: true })
+  .then(() => {
+    const app = express();
+    app.use(express.json());
+    app.listen(3000);
+    //////////////////////
+    app.post("/user", userController.saveUser);
+    app.get("/user", userController.getUser);
+    /////////////////////
+  })
+  .catch((erro) => {
+    console.log(erro);
+  });
