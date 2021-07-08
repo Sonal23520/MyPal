@@ -10,6 +10,7 @@ import {
 import Main from './screens/Main';
 import Login from './screens/Login';
 import Signup from './screens/Signup';
+import Home from './screens/Home';
 
 const Stack = createStackNavigator();
 
@@ -21,6 +22,7 @@ const App = () => {
           headerShown: false,
           cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
         }}>
+        <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Main" component={Main} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Signup" component={Signup} />

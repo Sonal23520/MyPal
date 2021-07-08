@@ -1,13 +1,81 @@
-import React from 'react';
+import React, {useState, useRef} from 'react';
 import * as native from 'native-base';
 import {StatusBar} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import axios from 'axios';
 
 StatusBar.setBarStyle('light-content', true);
 StatusBar.setBackgroundColor('#010400');
 
-const Login = () => {
-  const navigaton = useNavigation();
+const Signup = () => {
+  const navigation = useNavigation();
+  const [name, setname] = useState('');
+  const [email, setemail] = useState('');
+  const [password, setpassword] = useState('');
+  const [confirmpassword, setconfirmpassword] = useState('');
+
+  const [erromsg, seterromsg] = useState(false);
+  const [erromsgtype, seterromsgtype] = useState('');
+
+  const nameRef = useRef();
+  const emailRef = useRef();
+  const passwordRef = useRef();
+  const cpasswordRef = useRef();
+
+  function clear() {
+    nameRef.current.clear();
+    emailRef.current.clear();
+    passwordRef.current.clear();
+    cpasswordRef.current.clear();
+  }
+
+  function isEmailExists() {
+    return axios({
+      method: 'GET',
+      url: `http://192.168.43.46:3000/user/${email}`,
+    })
+      .then(res => {
+        return res.data;
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
+  function saveUser() {
+    isEmailExists()
+      .then(result => {
+        if (result) {
+          seterromsg(true);
+          seterromsgtype('Email already exists');
+        } else if (password != confirmpassword) {
+          seterromsg(true);
+          seterromsgtype(`Password doesn't match`);
+        } else {
+          axios({
+            method: 'POST',
+            url: 'http://192.168.43.46:3000/user',
+            data: {
+              name: name,
+              email: email,
+              password: password,
+            },
+          })
+            .then(res => {
+              if (res.data) {
+                navigation.navigate('Home');
+                clear();
+              }
+            })
+            .catch(err => {
+              console.log(err);
+            });
+        }
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
 
   return (
     <native.NativeBaseProvider>
@@ -31,7 +99,7 @@ const Login = () => {
           justifyContent="center"
           alignItems="center"
           behavior="padding"
-          keyboardVerticalOffset={120}>
+          keyboardVerticalOffset={140}>
           <native.Input
             placeholder="Name"
             w="75%"
@@ -39,6 +107,11 @@ const Login = () => {
             borderWidth={1}
             mb={4}
             h="50px"
+            color={'white'}
+            onChangeText={name => {
+              setname(name);
+            }}
+            ref={nameRef}
           />
           <native.Input
             placeholder="E-mail"
@@ -46,7 +119,12 @@ const Login = () => {
             borderRadius={'50px'}
             borderWidth={1}
             mb={4}
+            color={'white'}
             h="50px"
+            onChangeText={email => {
+              setemail(email);
+            }}
+            ref={emailRef}
           />
           <native.Input
             placeholder="Password"
@@ -54,8 +132,13 @@ const Login = () => {
             type="password"
             borderRadius={'50px'}
             borderWidth={1}
+            color={'white'}
             mb={4}
             h="50px"
+            onChangeText={password => {
+              setpassword(password);
+            }}
+            ref={passwordRef}
           />
           <native.Input
             placeholder="Confirm Password"
@@ -63,14 +146,25 @@ const Login = () => {
             type="password"
             borderRadius={'50px'}
             borderWidth={1}
+            color={'white'}
             mb={4}
             h="50px"
+            onChangeText={cpassword => {
+              setconfirmpassword(cpassword);
+            }}
+            ref={cpasswordRef}
           />
+          {erromsg ? (
+            <native.Text mb={2} color={'red.500'}>
+              {erromsgtype}
+            </native.Text>
+          ) : null}
           <native.Button
             mb={2}
             w="75%"
             borderRadius={'50px'}
-            colorScheme={'green'}>
+            colorScheme={'green'}
+            onPress={saveUser}>
             Signup
           </native.Button>
         </native.KeyboardAvoidingView>
@@ -81,7 +175,7 @@ const Login = () => {
             w="75%"
             borderRadius={'50px'}
             margin="auto"
-            onPress={() => navigaton.goBack()}>
+            onPress={() => navigation.goBack()}>
             Login
           </native.Button>
         </native.Box>
@@ -90,4 +184,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;

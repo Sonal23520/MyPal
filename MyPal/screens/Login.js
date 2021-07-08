@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React from 'react';
+import React, {useState, useRef} from 'react';
 import * as native from 'native-base';
 import {StatusBar} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
@@ -8,17 +8,35 @@ import axios from 'axios';
 StatusBar.setBarStyle('light-content', true);
 StatusBar.setBackgroundColor('#010400');
 
-function test() {
-  axios({
-    method: 'post',
-    url: 'http://192.168.42.235:3000/userLogin',
-    data: {ss: 'sonal'},
-  }).catch(er => {
-    console.log(er);
-  });
-}
 const Login = () => {
   const navigation = useNavigation();
+
+  const [email, setemail] = useState('');
+  const [password, setpassword] = useState('');
+  const [erromsg, seterromsg] = useState(false);
+
+  const emailRef = useRef();
+  const passwordRef = useRef();
+
+  function login() {
+    axios({
+      method: 'GET',
+      url: `http://192.168.43.46:3000/user/${email}/${password}`,
+    })
+      .then(res => {
+        if (!res.data) {
+          seterromsg(true);
+        } else {
+          seterromsg(false);
+          navigation.navigate('Home');
+          emailRef.current.clear();
+          passwordRef.current.clear();
+        }
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
 
   return (
     <native.NativeBaseProvider>
@@ -49,7 +67,10 @@ const Login = () => {
             borderRadius={'50px'}
             borderWidth={1}
             mb={4}
+            color={'white'}
             h="50px"
+            onChangeText={email => setemail(email)}
+            ref={emailRef}
           />
           <native.Input
             placeholder="Password"
@@ -58,14 +79,22 @@ const Login = () => {
             borderRadius={'50px'}
             borderWidth={1}
             mb={4}
+            color={'white'}
             h="50px"
+            onChangeText={password => setpassword(password)}
+            ref={passwordRef}
           />
+          {erromsg ? (
+            <native.Text color={'red.500'} mb={2}>
+              Email or password wrong
+            </native.Text>
+          ) : null}
           <native.Button
             mb={2}
             w="75%"
             borderRadius={'50px'}
             colorScheme={'green'}
-            onPress={test}>
+            onPress={login}>
             Login
           </native.Button>
           <native.Text w="75%" color="gray.300" textAlign="right">
