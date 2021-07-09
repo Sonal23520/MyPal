@@ -9,8 +9,8 @@ import FabButton from 'react-native-action-button';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
 
-// StatusBar.setBarStyle('light-content', true);
-// StatusBar.setBackgroundColor('#20c65c');
+StatusBar.setBarStyle('light-content', true);
+StatusBar.setBackgroundColor('#20c65c');
 
 const renderItem = ({item}) => (
   <native.Box
@@ -20,21 +20,32 @@ const renderItem = ({item}) => (
     alignItems="center"
     justifyContent="space-between"
     px={5}>
-    <native.Text fontSize="14px" color="gray.500">
-      {item.type}
-    </native.Text>
-    <native.Text fontSize="14px" color="gray.500">
-      {item.date}
-    </native.Text>
-    {item.status == 'income' ? (
-      <native.Text fontSize="14px" color="blue.500">
-        +{item.price}
+    <native.HStack w="40%" justifyContent="space-between">
+      <native.Text fontSize="14px" color="gray.500">
+        {item.type}
       </native.Text>
-    ) : (
-      <native.Text fontSize="14px" color="red.500">
-        -{item.price}
+      <native.Text fontSize="14px" color="gray.500">
+        {item.date}
       </native.Text>
-    )}
+    </native.HStack>
+    <native.HStack w="40%" justifyContent="space-between">
+      {item.status == 'expense' ? (
+        <native.Text fontSize="14px" color="gray.500">
+          {item.category}
+        </native.Text>
+      ) : (
+        <native.Text></native.Text>
+      )}
+      {item.status == 'income' ? (
+        <native.Text fontSize="14px" color="blue.500">
+          +{item.price}
+        </native.Text>
+      ) : (
+        <native.Text fontSize="14px" color="red.500">
+          -{item.price}
+        </native.Text>
+      )}
+    </native.HStack>
   </native.Box>
 );
 
@@ -43,12 +54,14 @@ const Home = () => {
     LogBox.ignoreLogs(['Animated: `useNativeDriver`']);
   });
   //Flat List Update//
-  const [data, setdata] = useState();
+  const [data, setdata] = useState([]);
 
   //For Updata Status//
   const [income, setIncome] = useState(0);
   const [expenses, setExpenses] = useState(0);
   const [total, setTotal] = useState(0);
+
+  const [key, setkey] = useState(0);
 
   useEffect(() => {
     listdata();
@@ -57,11 +70,11 @@ const Home = () => {
     axios({method: 'GET', url: 'http://192.168.43.46:3000/data'}).then(res => {
       setkey(res.data.length + 1);
       setdata(res.data);
+      console.log(res.data);
       ///////////////////
       let array = res.data;
       let incomeTotal = 0;
       let expensesTotal = 0;
-
       array.forEach(element => {
         if (element.status == 'income') {
           incomeTotal += parseInt(element.price);
@@ -94,7 +107,6 @@ const Home = () => {
   const [month, setmonth] = useState();
   const [date, setdate] = useState();
   const [currentmonth, setcurrentmonth] = useState();
-  const [key, setkey] = useState();
 
   useEffect(() => {
     const monthNames = [
@@ -117,13 +129,14 @@ const Home = () => {
     setdate(date.getDate() + '/' + date.getMonth());
   }, []);
 
-  async function addIncome() {
+  async function addIncome(typeOfButton) {
     await incomeRef.current.close();
     if (
       (incomeVal == '') |
-      (incomeVal == undefined) |
-      (typeVal == '') |
-      (typeVal == undefined)
+      (incomeVal == undefined)
+      //  |
+      // (typeVal == '') |
+      // (typeVal == undefined)
     ) {
       Toast.show({
         type: 'error',
@@ -145,7 +158,8 @@ const Home = () => {
         url: 'http://192.168.43.46:3000/data',
         data: {
           key: key,
-          type: typeVal,
+          type: typeOfButton,
+          category: 'none',
           month: currentmonth,
           status: 'income',
           price: incomeVal,
@@ -171,7 +185,7 @@ const Home = () => {
     }
   }
 
-  async function addExpenses() {
+  async function addExpenses(typeOfButton) {
     await expencesRef.current.close();
     if (
       (expensesVal == '') |
@@ -199,7 +213,8 @@ const Home = () => {
         url: 'http://192.168.43.46:3000/data',
         data: {
           key: key,
-          type: categoryVal,
+          type: typeOfButton,
+          category: categoryVal,
           month: currentmonth,
           status: 'expense',
           price: expensesVal,
@@ -299,7 +314,7 @@ const Home = () => {
       <native.Divider size={2} />
       <native.FlatList bg="#f5f7f9" data={data} renderItem={renderItem} />
       {/* /////////////////////////// */}
-      <FabButton buttonColor="#3498db">
+      <FabButton buttonColor="#20c65c">
         <FabButton.Item
           buttonColor="#ed4542"
           title="Expenses"
@@ -320,7 +335,11 @@ const Home = () => {
       {/* ////////////////////////////////// */}
 
       {/* ////Expenses Sheet//// */}
-      <ActionSheet ref={expencesRef} height={200} openDuration={250}>
+      <ActionSheet
+        ref={expencesRef}
+        closeOnDragDown={true}
+        height={180}
+        openDuration={500}>
         <native.Box>
           <native.Input
             placeholder="Expenses"
@@ -351,10 +370,36 @@ const Home = () => {
             }}
             value={categoryVal}
           />
+          <native.HStack mt={2} justifyContent="space-around">
+            <native.Button
+              colorScheme="green"
+              flex={1}
+              borderRadius={'0px'}
+              onPress={() => addExpenses('account')}>
+              Account
+            </native.Button>
+            <native.Divider orientation="vertical" />
+            <native.Button
+              flex={1}
+              colorScheme="green"
+              borderRadius={'0px'}
+              onPress={() => addExpenses('cash')}>
+              Cash
+            </native.Button>
+            <native.Divider orientation="vertical" />
+
+            <native.Button
+              flex={1}
+              colorScheme="green"
+              borderRadius={'0px'}
+              onPress={() => addExpenses('salary')}>
+              Salary
+            </native.Button>
+          </native.HStack>
         </native.Box>
       </ActionSheet>
       {/* ////Income Sheet//// */}
-      <ActionSheet ref={incomeRef} height={200} openDuration={250}>
+      <ActionSheet ref={incomeRef} height={110} openDuration={500}>
         <native.Input
           placeholder="Income"
           border={0}
@@ -366,12 +411,12 @@ const Home = () => {
             setincomeVal(val);
           }}
           ref={incomeInput}
-          onSubmitEditing={() => {
-            addIncome();
-          }}
+          // onSubmitEditing={() => {
+          //   addIncome();
+          // }}
           value={incomeVal}
         />
-        <native.Input
+        {/* <native.Input
           placeholder="Type"
           w="100%"
           h="50px"
@@ -379,11 +424,37 @@ const Home = () => {
           borderBottomWidth={1}
           onChangeText={val => settypeVal(val)}
           ref={typeInput}
-          onSubmitEditing={() => {
-            addIncome();
-          }}
+          // onSubmitEditing={() => {
+          //   addIncome();
+          // }}
           value={typeVal}
-        />
+        /> */}
+        <native.HStack mt={2} justifyContent="space-around">
+          <native.Button
+            colorScheme="green"
+            flex={1}
+            borderRadius={'0px'}
+            onPress={() => addIncome('account')}>
+            Account
+          </native.Button>
+          <native.Divider orientation="vertical" />
+          <native.Button
+            flex={1}
+            colorScheme="green"
+            borderRadius={'0px'}
+            onPress={() => addIncome('cash')}>
+            Cash
+          </native.Button>
+          <native.Divider orientation="vertical" />
+
+          <native.Button
+            flex={1}
+            colorScheme="green"
+            borderRadius={'0px'}
+            onPress={() => addIncome('salary')}>
+            Salary
+          </native.Button>
+        </native.HStack>
       </ActionSheet>
 
       <Toast ref={ref => Toast.setRef(ref)} />

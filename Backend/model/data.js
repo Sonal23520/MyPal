@@ -4,6 +4,7 @@ const data = mongo.Schema(
   {
     key: Number,
     type: String,
+    category: String,
     month: String,
     status: String,
     price: String,
