@@ -1,20 +1,79 @@
 import React, {useRef, useState, useEffect} from 'react';
 import * as native from 'native-base';
-import {StatusBar} from 'react-native';
+import {StatusBar, LogBox} from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
-import ActionSheet from 'react-native-actions-sheet';
+import ActionSheet from 'react-native-raw-bottom-sheet';
+import FabButton from 'react-native-action-button';
+
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
 
-StatusBar.setBarStyle('light-content', true);
-StatusBar.setBackgroundColor('#20c65c');
+// StatusBar.setBarStyle('light-content', true);
+// StatusBar.setBackgroundColor('#20c65c');
 
-///////////////
-
-///////////////
+const renderItem = ({item}) => (
+  <native.Box
+    bg="#fdfffd"
+    flexDirection="row"
+    h="40px"
+    alignItems="center"
+    justifyContent="space-between"
+    px={5}>
+    <native.Text fontSize="14px" color="gray.500">
+      {item.type}
+    </native.Text>
+    <native.Text fontSize="14px" color="gray.500">
+      {item.date}
+    </native.Text>
+    {item.status == 'income' ? (
+      <native.Text fontSize="14px" color="blue.500">
+        +{item.price}
+      </native.Text>
+    ) : (
+      <native.Text fontSize="14px" color="red.500">
+        -{item.price}
+      </native.Text>
+    )}
+  </native.Box>
+);
 
 const Home = () => {
+  useEffect(() => {
+    LogBox.ignoreLogs(['Animated: `useNativeDriver`']);
+  });
+  //Flat List Update//
+  const [data, setdata] = useState();
+
+  //For Updata Status//
+  const [income, setIncome] = useState(0);
+  const [expenses, setExpenses] = useState(0);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    listdata();
+  }, []);
+  function listdata() {
+    axios({method: 'GET', url: 'http://192.168.43.46:3000/data'}).then(res => {
+      setkey(res.data.length + 1);
+      setdata(res.data);
+      ///////////////////
+      let array = res.data;
+      let incomeTotal = 0;
+      let expensesTotal = 0;
+
+      array.forEach(element => {
+        if (element.status == 'income') {
+          incomeTotal += parseInt(element.price);
+        } else {
+          expensesTotal += parseInt(element.price);
+        }
+      });
+      setIncome(incomeTotal);
+      setExpenses(expensesTotal);
+      setTotal(incomeTotal - expensesTotal);
+    });
+  }
   //For Action Sheelt//
   const expencesRef = useRef();
   const incomeRef = useRef();
@@ -31,18 +90,11 @@ const Home = () => {
   const [categoryVal, setcategoryVal] = useState();
   const [typeVal, settypeVal] = useState();
 
-  //For Updata Status//
-  const [income, setIncome] = useState(0);
-  const [expenses, setExpenses] = useState(0);
-  const [total, setTotal] = useState(0);
-
   //Update data//
   const [month, setmonth] = useState();
+  const [date, setdate] = useState();
   const [currentmonth, setcurrentmonth] = useState();
   const [key, setkey] = useState();
-
-  //Flat List Update//
-  const [data, setdata] = useState([]);
 
   useEffect(() => {
     const monthNames = [
@@ -62,21 +114,11 @@ const Home = () => {
     const date = new Date();
     setmonth(monthNames[date.getMonth()]);
     setcurrentmonth(monthNames[date.getMonth()]);
+    setdate(date.getDate() + '/' + date.getMonth());
   }, []);
 
-  getData();
-  function getData() {
-    axios({method: 'GET', url: 'http://192.168.43.46:3000/data'})
-      .then(res => {
-        setkey(res.data.length + 1);
-        setdata(res.data);
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  }
-
   async function addIncome() {
+    await incomeRef.current.close();
     if (
       (incomeVal == '') |
       (incomeVal == undefined) |
@@ -91,8 +133,8 @@ const Home = () => {
         topOffset: 60,
       });
     } else {
-      incomeInput.current.clear();
-      typeInput.current.clear();
+      setincomeVal('');
+      settypeVal('');
       let val = await (parseInt(income) + parseInt(incomeVal));
       setIncome(val);
       setTotal(val - expenses);
@@ -102,11 +144,12 @@ const Home = () => {
         method: 'POST',
         url: 'http://192.168.43.46:3000/data',
         data: {
+          key: key,
           type: typeVal,
           month: currentmonth,
           status: 'income',
           price: incomeVal,
-          key: key,
+          date: date,
         },
       })
         .then(res => {
@@ -118,7 +161,7 @@ const Home = () => {
               autoHide: true,
               topOffset: 60,
             });
-            getData();
+            listdata();
           }
         })
         .catch(err => {
@@ -129,6 +172,7 @@ const Home = () => {
   }
 
   async function addExpenses() {
+    await expencesRef.current.close();
     if (
       (expensesVal == '') |
       (expensesVal == undefined) |
@@ -143,23 +187,23 @@ const Home = () => {
         topOffset: 60,
       });
     } else {
-      expensesInput.current.clear();
-      categoryInput.current.clear();
+      setexpensesVal('');
+      setcategoryVal('');
       let val = await (parseInt(expenses) + parseInt(expensesVal));
       setExpenses(val);
       ////Add Total////
       setTotal(income - val);
-
       ////////POST EXPENSE DATA//////
       axios({
         method: 'POST',
         url: 'http://192.168.43.46:3000/data',
         data: {
+          key: key,
           type: categoryVal,
           month: currentmonth,
           status: 'expense',
           price: expensesVal,
-          key: key,
+          date: date,
         },
       })
         .then(res => {
@@ -171,7 +215,7 @@ const Home = () => {
               autoHide: true,
               topOffset: 60,
             });
-            getData();
+            listdata();
           }
         })
         .catch(err => {
@@ -180,10 +224,11 @@ const Home = () => {
       ///////////////////////////////
     }
   }
+
   return (
     <native.NativeBaseProvider>
       <native.HStack
-        bg={'green.500'}
+        bg={'#fbfffa'}
         justifyContent="space-between"
         alignItems="center"
         h="50px">
@@ -215,6 +260,7 @@ const Home = () => {
           </native.Text>
         </native.Box>
       </native.HStack>
+      {/* <native.Divider size={1} /> */}
       <native.HStack
         bg={'#fdfffd'}
         justifyContent="space-between"
@@ -222,78 +268,59 @@ const Home = () => {
         h="40px"
         w="100%"
         px={2}>
-        <native.Box flexDirection="row">
-          <AntDesign name="arrowdown" size={20} color="#2ecc71" />
-          <native.Text ml={2}>{income}</native.Text>
-        </native.Box>
-        <native.Box flexDirection="row">
-          <AntDesign name="arrowup" size={20} color="#e74c3c" />
-          <native.Text ml={2}>{expenses}</native.Text>
-        </native.Box>
-        <native.Box flexDirection="row">
-          <AntDesign name="plus" size={20} color="#3498db" />
-          <native.Text ml={2}>{total}</native.Text>
-        </native.Box>
+        <native.VStack justifyContent="center" alignItems="center">
+          <native.Text ml={2} mb={1} fontSize="12px">
+            Income
+          </native.Text>
+          <native.Box flexDirection="row">
+            <AntDesign name="arrowdown" size={16} color="#2ecc71" />
+            <native.Text>{income}</native.Text>
+          </native.Box>
+        </native.VStack>
+        <native.VStack justifyContent="center" alignItems="center">
+          <native.Text ml={2} mb={1} fontSize="12px">
+            Expenses
+          </native.Text>
+          <native.Box flexDirection="row">
+            <AntDesign name="arrowup" size={16} color="#e74c3c" />
+            <native.Text>{expenses}</native.Text>
+          </native.Box>
+        </native.VStack>
+        <native.VStack justifyContent="center" alignItems="center">
+          <native.Text ml={2} mb={1} fontSize="12px">
+            Total
+          </native.Text>
+          <native.Box flexDirection="row">
+            <AntDesign name="plus" size={16} color="#3498db" />
+            <native.Text>{total}</native.Text>
+          </native.Box>
+        </native.VStack>
       </native.HStack>
       <native.Divider size={2} />
-      <native.FlatList
-        bg="#f5f7f9"
-        data={data}
-        renderItem={({item}) => (
-          <native.Box
-            bg="#fdfffd"
-            flexDirection="row"
-            h="40px"
-            alignItems="center"
-            justifyContent="space-between"
-            px={5}>
-            <native.Text fontSize="14px" color="gray.500">
-              {item.type}
-            </native.Text>
-            {item.status == 'income' ? (
-              <native.Text fontSize="14px" color="blue.500">
-                +{item.price}
-              </native.Text>
-            ) : (
-              <native.Text fontSize="14px" color="red.500">
-                -{item.price}
-              </native.Text>
-            )}
-          </native.Box>
-        )}
-      />
-
-      <native.HStack justifyContent="space-around">
-        <native.Button
-          startIcon={<AntDesign name={'arrowdown'} size={20} color="white" />}
+      <native.FlatList bg="#f5f7f9" data={data} renderItem={renderItem} />
+      {/* /////////////////////////// */}
+      <FabButton buttonColor="#3498db">
+        <FabButton.Item
+          buttonColor="#ed4542"
+          title="Expenses"
           onPress={() => {
-            incomeRef.current?.setModalVisible();
-          }}
-          colorScheme="green"
-          w="50%"
-          borderRadius="0px">
-          Income
-        </native.Button>
-        <native.Button
-          startIcon={<AntDesign name={'arrowup'} size={20} color="white" />}
-          onPress={() => {
-            expencesRef.current?.setModalVisible();
-          }}
-          colorScheme="red"
-          w="50%"
-          borderRadius="0px"
-          _text={{
-            color: 'white',
+            expencesRef.current.open();
           }}>
-          Expenses
-        </native.Button>
-      </native.HStack>
+          <AntDesign name="arrowup" size={20} color="white" />
+        </FabButton.Item>
+        <FabButton.Item
+          buttonColor="#1abc9c"
+          title="Income"
+          onPress={() => {
+            incomeRef.current.open();
+          }}>
+          <AntDesign name="arrowdown" size={20} color="white" />
+        </FabButton.Item>
+      </FabButton>
+      {/* ////////////////////////////////// */}
+
       {/* ////Expenses Sheet//// */}
-      <ActionSheet
-        ref={expencesRef}
-        extraScroll={10}
-        delayActionSheetDraw={true}
-        delayActionSheetDrawTime={52}>
+      <ActionSheet ref={expencesRef} height={200} openDuration={250}>
         <native.Box>
           <native.Input
             placeholder="Expenses"
@@ -309,6 +336,7 @@ const Home = () => {
             onSubmitEditing={() => {
               addExpenses();
             }}
+            value={expensesVal}
           />
           <native.Input
             w="100%"
@@ -321,15 +349,12 @@ const Home = () => {
             onSubmitEditing={() => {
               addExpenses();
             }}
+            value={categoryVal}
           />
         </native.Box>
       </ActionSheet>
       {/* ////Income Sheet//// */}
-      <ActionSheet
-        ref={incomeRef}
-        extraScroll={10}
-        delayActionSheetDraw={true}
-        delayActionSheetDrawTime={52}>
+      <ActionSheet ref={incomeRef} height={200} openDuration={250}>
         <native.Input
           placeholder="Income"
           border={0}
@@ -344,6 +369,7 @@ const Home = () => {
           onSubmitEditing={() => {
             addIncome();
           }}
+          value={incomeVal}
         />
         <native.Input
           placeholder="Type"
@@ -356,8 +382,10 @@ const Home = () => {
           onSubmitEditing={() => {
             addIncome();
           }}
+          value={typeVal}
         />
       </ActionSheet>
+
       <Toast ref={ref => Toast.setRef(ref)} />
     </native.NativeBaseProvider>
   );
@@ -365,106 +393,28 @@ const Home = () => {
 
 export default Home;
 
-//    {/* ////ROW 1/// */}
-//    <native.HStack mt={2} flexDirection="row">
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      Bills
-//    </native.Button>
-//    <native.Divider orientation="vertical" />
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      Car
-//    </native.Button>
-//    <native.Divider orientation="vertical" />
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      Clothes
-//    </native.Button>
-//    <native.Divider orientation="vertical" />
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      Phone
-//    </native.Button>
-//  </native.HStack>
-//  {/* ///ROW 2//// */}
-//  <native.HStack flexDirection="row">
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      House
-//    </native.Button>
-//    <native.Divider orientation="vertical" />
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      Pets
-//    </native.Button>
-//    <native.Divider orientation="vertical" />
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      Food
-//    </native.Button>
-//    <native.Divider orientation="vertical" />
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      Health
-//    </native.Button>
-//  </native.HStack>
-//  {/* ///ROW 3/// */}
-//  <native.HStack flexDirection="row">
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      Sport
-//    </native.Button>
-//    <native.Divider orientation="vertical" />
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      Taxi
-//    </native.Button>
-//    <native.Divider orientation="vertical" />
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      Beauty
-//    </native.Button>
-//    <native.Divider orientation="vertical" />
-//    <native.Button
-//      variant="outline"
-//      colorScheme={'green'}
-//      borderRadius="0px"
-//      w="25%">
-//      Other
-//    </native.Button>
-//  </native.HStack>
-//  {/* ////ROW END/// */}
+// <native.HStack justifyContent="space-around">
+// <native.Button
+//   startIcon={<AntDesign name={'arrowdown'} size={20} color="white" />}
+//   onPress={() => {
+//     incomeRef.current.open();
+//   }}
+//   colorScheme="green"
+//   w="50%"
+//   borderRadius="0px">
+//   Income
+// </native.Button>
+// <native.Button
+//   startIcon={<AntDesign name={'arrowup'} size={20} color="white" />}
+//   onPress={() => {
+//     expencesRef.current.open();
+//   }}
+//   colorScheme="red"
+//   w="50%"
+//   borderRadius="0px"
+//   _text={{
+//     color: 'white',
+//   }}>
+//   Expenses
+// </native.Button>
+// </native.HStack>
