@@ -48,7 +48,20 @@ const renderItem = ({item}) => (
     </native.HStack>
   </native.Box>
 );
-
+const monthNames = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 const Home = () => {
   //Flat List Update//
   const [data, setdata] = useState([]);
@@ -56,6 +69,9 @@ const Home = () => {
   const [income, setIncome] = useState(0);
   const [expenses, setExpenses] = useState(0);
   const [total, setTotal] = useState(0);
+  const [previncome, setprevIncome] = useState(0);
+  const [prevexpenses, setprevExpenses] = useState(0);
+  const [prevtotal, setprevTotal] = useState(0);
 
   //For Action Sheelt//
   const expencesRef = useRef();
@@ -76,80 +92,60 @@ const Home = () => {
   //Update data//
   const [month, setmonth] = useState();
   const [date, setdate] = useState();
-  const [currentmonth, setcurrentmonth] = useState();
   const [key, setkey] = useState(0);
 
   useEffect(() => {
     LogBox.ignoreLogs(['Animated: `useNativeDriver`']);
+    const date = new Date();
+    setmonth(monthNames[date.getMonth()]);
+    setdate(date.getDate() + '/' + date.getMonth());
+    listdata();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    listdata();
-  }, []);
+    setkey(data.length + 1);
+    console.log(data);
+  }, [data]);
+  useEffect(() => {
+    setTotal(income - expenses);
+  }, [expenses, income]);
 
   function listdata() {
-    axios({method: 'GET', url: 'http://192.168.43.46:3000/data'}).then(res => {
-      setkey(res.data.length + 1);
-      setdata(res.data);
-      console.log(res.data);
-      ///////////////////
+    axios({
+      method: 'GET',
+      url: `http://192.168.43.46:3000/data/${key == 0 ? 0 : key - 1}`,
+    }).then(res => {
       let array = res.data;
       let incomeTotal = 0;
       let expensesTotal = 0;
       array.forEach(element => {
+        setdata(old => [...old, element]);
         if (element.status == 'income') {
           incomeTotal += parseInt(element.price);
         } else {
           expensesTotal += parseInt(element.price);
         }
       });
-      setIncome(incomeTotal);
-      setExpenses(expensesTotal);
-      setTotal(incomeTotal - expensesTotal);
+      setIncome(income + incomeTotal);
+      setExpenses(expenses + expensesTotal);
     });
   }
 
-  useEffect(() => {
-    const monthNames = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    const date = new Date();
-    setmonth(monthNames[date.getMonth()]);
-    setcurrentmonth(monthNames[date.getMonth()]);
-    setdate(date.getDate() + '/' + date.getMonth());
-  }, []);
-
-  async function addIncome(typeOfButton) {
-    await incomeRef.current.close();
-    if (
-      (incomeVal == '') |
-      (incomeVal == undefined)
-      //  |
-      // (typeVal == '') |
-      // (typeVal == undefined)
-    ) {
+  function addIncome(typeOfButton) {
+    incomeRef.current.close();
+    if ((incomeVal == '') | (incomeVal == undefined)) {
       Toast.show({
         type: 'error',
-        text1: 'Please Fill Income Field & Type.',
+        text1: 'Please Fill Income Field.',
         position: 'top',
         autoHide: true,
         topOffset: 60,
+        visibilityTime: 50,
       });
     } else {
       setincomeVal('');
-      settypeVal('');
-      let val = await (parseInt(income) + parseInt(incomeVal));
+      let val = parseInt(income) + parseInt(incomeVal);
       setIncome(val);
       setTotal(val - expenses);
 
@@ -161,7 +157,7 @@ const Home = () => {
           key: key,
           type: typeOfButton,
           category: 'none',
-          month: currentmonth,
+          month: month,
           status: 'income',
           price: incomeVal,
           date: date,
@@ -175,6 +171,7 @@ const Home = () => {
               position: 'top',
               autoHide: true,
               topOffset: 60,
+              visibilityTime: 50,
             });
             listdata();
           }
@@ -182,7 +179,6 @@ const Home = () => {
         .catch(err => {
           console.log(err);
         });
-      /////////////////////////////////////////
     }
   }
 
@@ -200,6 +196,7 @@ const Home = () => {
         position: 'top',
         autoHide: true,
         topOffset: 60,
+        visibilityTime: 50,
       });
     } else {
       setexpensesVal('');
@@ -216,7 +213,7 @@ const Home = () => {
           key: key,
           type: typeOfButton,
           category: categoryVal,
-          month: currentmonth,
+          month: month,
           status: 'expense',
           price: expensesVal,
           date: date,
@@ -230,6 +227,7 @@ const Home = () => {
               position: 'top',
               autoHide: true,
               topOffset: 60,
+              visibilityTime: 50,
             });
             listdata();
           }

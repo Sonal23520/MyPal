@@ -7,7 +7,8 @@ exports.saveData = async (req, res) => {
 };
 
 exports.getData = async (req, res) => {
-  const data = await Data.find({}, { _id: 0, __v: 0 }).sort({ key: -1 });
-  // .skip(1);
+  const data = await Data.find({}, { _id: 0, __v: 0 }).skip(
+    parseInt(req.params.key)
+  );
   res.send(data);
 };

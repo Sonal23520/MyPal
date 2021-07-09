@@ -20,8 +20,8 @@ mongo
     app.get("/user/:email/:password", userController.getLoginDeatails);
     app.get("/user/:email", userController.getExistsEmail);
     /////////Data/////////
-    app.post('/data',dataController.saveData)
-    app.get('/data',dataController.getData)
+    app.post("/data", dataController.saveData);
+    app.get("/data/:key", dataController.getData);
 
     /////////////////////
   })
