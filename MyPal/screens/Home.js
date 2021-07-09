@@ -34,7 +34,7 @@ const renderItem = ({item}) => (
           {item.category}
         </native.Text>
       ) : (
-        <native.Text></native.Text>
+        <native.Box></native.Box>
       )}
       {item.status == 'income' ? (
         <native.Text fontSize="14px" color="blue.500">
@@ -50,22 +50,43 @@ const renderItem = ({item}) => (
 );
 
 const Home = () => {
-  useEffect(() => {
-    LogBox.ignoreLogs(['Animated: `useNativeDriver`']);
-  });
   //Flat List Update//
   const [data, setdata] = useState([]);
-
   //For Updata Status//
   const [income, setIncome] = useState(0);
   const [expenses, setExpenses] = useState(0);
   const [total, setTotal] = useState(0);
 
+  //For Action Sheelt//
+  const expencesRef = useRef();
+  const incomeRef = useRef();
+
+  //For Ref Input//
+  const incomeInput = useRef();
+  const expensesInput = useRef();
+  const categoryInput = useRef();
+  const typeInput = useRef();
+
+  //For Get Input Value//
+  const [incomeVal, setincomeVal] = useState();
+  const [expensesVal, setexpensesVal] = useState();
+  const [categoryVal, setcategoryVal] = useState();
+  const [typeVal, settypeVal] = useState();
+
+  //Update data//
+  const [month, setmonth] = useState();
+  const [date, setdate] = useState();
+  const [currentmonth, setcurrentmonth] = useState();
   const [key, setkey] = useState(0);
+
+  useEffect(() => {
+    LogBox.ignoreLogs(['Animated: `useNativeDriver`']);
+  }, []);
 
   useEffect(() => {
     listdata();
   }, []);
+
   function listdata() {
     axios({method: 'GET', url: 'http://192.168.43.46:3000/data'}).then(res => {
       setkey(res.data.length + 1);
@@ -87,26 +108,6 @@ const Home = () => {
       setTotal(incomeTotal - expensesTotal);
     });
   }
-  //For Action Sheelt//
-  const expencesRef = useRef();
-  const incomeRef = useRef();
-
-  //For Ref Input//
-  const incomeInput = useRef();
-  const expensesInput = useRef();
-  const categoryInput = useRef();
-  const typeInput = useRef();
-
-  //For Get Input Value//
-  const [incomeVal, setincomeVal] = useState();
-  const [expensesVal, setexpensesVal] = useState();
-  const [categoryVal, setcategoryVal] = useState();
-  const [typeVal, settypeVal] = useState();
-
-  //Update data//
-  const [month, setmonth] = useState();
-  const [date, setdate] = useState();
-  const [currentmonth, setcurrentmonth] = useState();
 
   useEffect(() => {
     const monthNames = [
@@ -275,7 +276,6 @@ const Home = () => {
           </native.Text>
         </native.Box>
       </native.HStack>
-      {/* <native.Divider size={1} /> */}
       <native.HStack
         bg={'#fdfffd'}
         justifyContent="space-between"
@@ -411,24 +411,8 @@ const Home = () => {
             setincomeVal(val);
           }}
           ref={incomeInput}
-          // onSubmitEditing={() => {
-          //   addIncome();
-          // }}
           value={incomeVal}
         />
-        {/* <native.Input
-          placeholder="Type"
-          w="100%"
-          h="50px"
-          border={0}
-          borderBottomWidth={1}
-          onChangeText={val => settypeVal(val)}
-          ref={typeInput}
-          // onSubmitEditing={() => {
-          //   addIncome();
-          // }}
-          value={typeVal}
-        /> */}
         <native.HStack mt={2} justifyContent="space-around">
           <native.Button
             colorScheme="green"
