@@ -63,8 +63,8 @@ const BottomNav = () => {
       />
 
       <Tab.Screen
-        name="Setting"
-        component={Setting}
+        name="User"
+        component={User}
         options={{
           tabBarIcon: ({focused}) => (
             <native.NativeBaseProvider>
@@ -87,8 +87,8 @@ const BottomNav = () => {
       />
 
       <Tab.Screen
-        name="User"
-        component={User}
+        name="Setting"
+        component={Setting}
         options={{
           tabBarIcon: ({focused}) => (
             <native.NativeBaseProvider>

@@ -123,7 +123,12 @@ const Status = () => {
     const date = new Date();
     setmonth(monthNames[date.getMonth()]);
     setdate(date.getDate() + '/' + date.getMonth());
-    listdata();
+    //////////////////////////////////////
+    axios({method: 'GET', url: 'http://192.168.43.46:3000/data'}).then(res => {
+      setdata(res.data);
+    });
+
+    ////////////////////////////////////
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -137,11 +142,12 @@ const Status = () => {
   function listdata() {
     axios({
       method: 'GET',
-      url: `http://192.168.43.46:3000/data/${key == 0 ? 0 : key - 1}`,
+      url: `http://192.168.43.46:3000/data/${key - 1}`,
     }).then(res => {
       let array = res.data;
       let incomeTotal = 0;
       let expensesTotal = 0;
+
       array.forEach(element => {
         setdata(old => [...old, element]);
         if (element.status == 'income') {
@@ -155,7 +161,7 @@ const Status = () => {
     });
   }
 
-  function addIncome(typeOfButton) {
+  const addIncome = typeOfButton => {
     incomeRef.current.close();
     if ((incomeVal == '') | (incomeVal == undefined)) {
       Toast.show({
@@ -203,7 +209,7 @@ const Status = () => {
           console.log(err);
         });
     }
-  }
+  };
 
   async function addExpenses(typeOfButton) {
     await expencesRef.current.close();

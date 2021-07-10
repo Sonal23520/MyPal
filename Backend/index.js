@@ -22,6 +22,7 @@ mongo
     /////////Data/////////
     app.post("/data", dataController.saveData);
     app.get("/data/:key", dataController.getData);
+    app.get("/data", dataController.getAllData);
 
     /////////////////////
   })

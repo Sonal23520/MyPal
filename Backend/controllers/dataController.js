@@ -12,3 +12,8 @@ exports.getData = async (req, res) => {
   );
   res.send(data);
 };
+
+exports.getAllData = async (req, res) => {
+  const data = await Data.find();
+  res.send(data);
+};
