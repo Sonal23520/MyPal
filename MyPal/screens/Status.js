@@ -126,6 +126,19 @@ const Status = () => {
     //////////////////////////////////////
     axios({method: 'GET', url: 'http://192.168.43.46:3000/data'}).then(res => {
       setdata(res.data);
+      let array = res.data;
+      let incomeTotal = 0;
+      let expensesTotal = 0;
+
+      array.forEach(element => {
+        if (element.status == 'income') {
+          incomeTotal += parseInt(element.price);
+        } else {
+          expensesTotal += parseInt(element.price);
+        }
+      });
+      setIncome(income + incomeTotal);
+      setExpenses(expenses + expensesTotal);
     });
 
     ////////////////////////////////////
