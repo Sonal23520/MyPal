@@ -1,7 +1,8 @@
 import React from 'react';
 import {NativeBaseProvider} from 'native-base';
 import Header from '../component/Header';
-const Home = () => {
+
+const Setting = () => {
   return (
     <NativeBaseProvider>
       <Header />
@@ -9,4 +10,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Setting;
