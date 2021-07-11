@@ -19,8 +19,8 @@ import Toast from 'react-native-toast-message';
 import axios from 'axios';
 import Header from '../component/Header';
 
-StatusBar.setBarStyle('light-content', true);
-StatusBar.setBackgroundColor('#20c65c');
+// StatusBar.setBarStyle('light-content', true);
+// StatusBar.setBackgroundColor('#20c65c');
 
 let category = '';
 const CategoryItems = () => {

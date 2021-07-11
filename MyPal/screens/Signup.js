@@ -3,6 +3,7 @@ import * as native from 'native-base';
 import {StatusBar} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
 
 StatusBar.setBarStyle('light-content', true);
 StatusBar.setBackgroundColor('#010400');
@@ -45,9 +46,49 @@ const Signup = () => {
   function saveUser() {
     isEmailExists()
       .then(result => {
-        if (result) {
-          seterromsg(true);
-          seterromsgtype('Email already exists');
+        if ((name == '') | (name == null)) {
+          Toast.show({
+            type: 'error',
+            text1: 'Please fill name field',
+            position: 'top',
+            autoHide: true,
+            topOffset: 60,
+            visibilityTime: 1000,
+          });
+        } else if ((email == '') | (email == null)) {
+          Toast.show({
+            type: 'error',
+            text1: 'Please fill email field',
+            position: 'top',
+            autoHide: true,
+            topOffset: 60,
+            visibilityTime: 1000,
+          });
+        } else if (result) {
+          Toast.show({
+            type: 'error',
+            text1: 'Email already exists',
+            position: 'top',
+            autoHide: true,
+            topOffset: 60,
+            visibilityTime: 1000,
+          });
+          // seterromsg(true);
+          // seterromsgtype('Email already exists');
+        } else if (
+          (password == '') |
+          (password == null) |
+          (confirmpassword == '') |
+          (confirmpassword == null)
+        ) {
+          Toast.show({
+            type: 'error',
+            text1: 'Please fill password fields',
+            position: 'top',
+            autoHide: true,
+            topOffset: 60,
+            visibilityTime: 1000,
+          });
         } else if (password != confirmpassword) {
           seterromsg(true);
           seterromsgtype(`Password doesn't match`);
@@ -63,7 +104,7 @@ const Signup = () => {
           })
             .then(res => {
               if (res.data) {
-                navigation.navigate('Home');
+                navigation.navigate('BottomNav');
                 clear();
               }
             })
@@ -180,6 +221,7 @@ const Signup = () => {
           </native.Button>
         </native.Box>
       </native.Box>
+      <Toast ref={ref => Toast.setRef(ref)} />
     </native.NativeBaseProvider>
   );
 };

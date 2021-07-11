@@ -2,6 +2,8 @@ import React, {useState, useEffect} from 'react';
 import {HStack, Box, Text, IconButton} from 'native-base';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useNavigation} from '@react-navigation/native';
 
 const monthNames = [
   'January',
@@ -18,11 +20,20 @@ const monthNames = [
   'December',
 ];
 const Header = () => {
+  const navigation = useNavigation();
+
   const [month, setmonth] = useState();
   useEffect(() => {
     const date = new Date();
     setmonth(monthNames[date.getMonth()]);
   }, []);
+
+  async function asyncDelete() {
+    await AsyncStorage.removeItem('user').then(() => {
+      navigation.navigate('Main');
+    });
+  }
+
   return (
     <HStack
       bg={'#fbfffa'}
@@ -46,14 +57,20 @@ const Header = () => {
         />
       </Box>
       <Box>
-        <Text>
-          <IconButton
-            icon={
-              <Entypo name="dots-three-vertical" size={20} color="#2d3436" />
-            }
-          />
-        </Text>
+        <IconButton
+          icon={
+            <AntDesign
+              name="logout"
+              onPress={asyncDelete}
+              size={20}
+              color="#2d3436"
+            />
+          }
+        />
       </Box>
+      {/* ///// */}
+
+      {/* ///// */}
     </HStack>
   );
 };

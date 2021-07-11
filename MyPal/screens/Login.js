@@ -4,9 +4,11 @@ import * as native from 'native-base';
 import {StatusBar} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-StatusBar.setBarStyle('light-content', true);
-StatusBar.setBackgroundColor('#010400');
+// StatusBar.setBarStyle('light-content', true);
+// StatusBar.setBackgroundColor('#010400');
 
 const Login = () => {
   const navigation = useNavigation();
@@ -19,23 +21,41 @@ const Login = () => {
   const passwordRef = useRef();
 
   function login() {
-    axios({
-      method: 'GET',
-      url: `http://192.168.43.46:3000/user/${email}/${password}`,
-    })
-      .then(res => {
-        if (!res.data) {
-          seterromsg(true);
-        } else {
-          seterromsg(false);
-          navigation.navigate('Home');
-          emailRef.current.clear();
-          passwordRef.current.clear();
-        }
-      })
-      .catch(err => {
-        console.log(err);
+    if (
+      (email == '') |
+      (email == null) |
+      (password == '') |
+      (password == null)
+    ) {
+      console.log('okkk');
+      Toast.show({
+        type: 'error',
+        text1: 'Please fill require fields',
+        position: 'top',
+        autoHide: true,
+        topOffset: 60,
+        visibilityTime: 1000,
       });
+    } else {
+      axios({
+        method: 'GET',
+        url: `http://192.168.43.46:3000/user/${email}/${password}`,
+      })
+        .then(async res => {
+          if (!res.data) {
+            seterromsg(true);
+          } else {
+            await AsyncStorage.setItem('user', 'ok');
+            seterromsg(false);
+            navigation.navigate('BottomNav');
+            emailRef.current.clear();
+            passwordRef.current.clear();
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    }
   }
 
   return (
@@ -113,6 +133,7 @@ const Login = () => {
           </native.Button>
         </native.Box>
       </native.Box>
+      <Toast ref={ref => Toast.setRef(ref)} />
     </native.NativeBaseProvider>
   );
 };

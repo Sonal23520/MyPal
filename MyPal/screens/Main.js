@@ -1,14 +1,26 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import * as native from 'native-base';
 import {StatusBar} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 StatusBar.setBarStyle('light-content', true);
-StatusBar.setBackgroundColor('#010400');
+StatusBar.setBackgroundColor('#20c65c');
 
 const Main = () => {
   const navigation = useNavigation();
-
+  async function getKey() {
+    await AsyncStorage.getItem('user').then(res => {
+      if (res == 'ok') {
+        navigation.navigate('BottomNav');
+      }
+    });
+    // let key = await AsyncStorage.getItem('user');
+    // return key;
+  }
+  useEffect(() => {
+    console.log(getKey());
+  }, []);
   return (
     <native.NativeBaseProvider>
       <native.Image
